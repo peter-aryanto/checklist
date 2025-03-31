@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlusCircle, Trash2 } from 'lucide-react';
 
 interface CheckListItem {
@@ -9,6 +9,7 @@ interface CheckListItem {
 
 export default function App() {
   const [items, setItems] = useState<CheckListItem[]>([]);
+  const [reloaded, setReloaded] = useState<boolean>(false);
 
   const addItem = () => {
     const newItem: CheckListItem = {
@@ -16,18 +17,54 @@ export default function App() {
       text: '',
       checked: false
     };
-    setItems([...items, newItem]);
+    const updatedItems = [...items, newItem];
+    setItems(updatedItems);
+    localStorage.setItem('checklist-items', JSON.stringify(updatedItems));
   };
 
   const deleteItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+    const updatedItems = items.filter(item => item.id !== id);
+    setItems(updatedItems);
+    localStorage.setItem('checklist-items', JSON.stringify(updatedItems));
   };
 
   const updateItem = (id: string, updates: Partial<CheckListItem>) => {
-    setItems(items.map(item => 
+    const updatedItems = items.map(item => 
       item.id === id ? { ...item, ...updates } : item
-    ));
+    );
+    setItems(updatedItems);
+    localStorage.setItem('checklist-items', JSON.stringify(updatedItems));
   };
+
+  useEffect(() => {
+    const localItemsJsonString = localStorage.getItem('checklist-items') ?? '';
+    let localItems: CheckListItem[] = [];
+    if (localItemsJsonString) {
+      localItems = JSON.parse(localItemsJsonString);
+    }
+    if (localItems) {
+      setItems(localItems);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (items.length === 0 || reloaded) {
+      return;
+    }
+
+    var itemTexts = document.getElementsByTagName('textarea');
+    // for (let i = 0; i < itemTexts.length; i++) {
+    //   itemTexts[i].innerHTML = '';
+    // }
+    for (let i = 0; i < itemTexts.length; i++) {
+      if (items[i]) {
+        // itemTexts[i].innerHTML = items[i].text;
+        itemTexts[0].style.height = `${itemTexts[0].scrollHeight}px`;
+      }
+    }
+    setReloaded(true);
+  }, [items, reloaded]);
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -49,7 +86,8 @@ export default function App() {
           {items.map(item => (
             <div
               key={item.id}
-              className="flex items-start gap-3 bg-white p-4 rounded-lg shadow-sm"
+              className="flex items-start gap-3 bg-white p-4 rounded-lg shadow-sm min-h-auto"
+              style={{ padding: '0.5em 1.0em', height: 'auto' }}
             >
               <input
                 type="checkbox"
@@ -79,6 +117,7 @@ export default function App() {
                 rows={1}
                 className="flex-1 resize-none overflow-hidden bg-transparent p-0 focus:ring-0 focus:outline-none"
                 style={{
+                  overflow: 'auto',
                   height: 'auto',
                   minHeight: '24px'
                 }}

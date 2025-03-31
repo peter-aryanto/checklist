@@ -17,13 +17,34 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script>
-      window.addEventListener("beforeunload", function (event) {
-          event.preventDefault(); // Some browsers require this
-      });
-      // OR
-      window.onbeforeunload= (event) => {
-          event.preventDefault(); // Some browsers require this
+      window.onbeforeunload = (event) => {
+          event.preventDefault();
       }
+    </script>
+    <script type="text/javascript">
+      const registerServiceWorker = async () => {
+        if ('serviceWorker' in navigator) {
+          try {
+            const registration = await navigator.serviceWorker.register(
+              './sw.js',
+              {
+                scope: '/',
+              }
+            );
+            if (registration.installing) {
+              console.log('Service worker installing');
+            } else if (registration.waiting) {
+              console.log('Service worker installed');
+            } else if (registration.active) {
+              console.log('Service worker active');
+            }
+          } catch (error) {
+            console.error(`Registration failed with ${error}`);
+          }
+        }
+      };
+
+      registerServiceWorker();
     </script>
   </body>
 </html>
